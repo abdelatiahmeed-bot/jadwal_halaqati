@@ -527,7 +527,7 @@ class _StudentScheduleScreenState extends ConsumerState<StudentScheduleScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    hasQuran ? 'مقرر حضور القرآن' : 'بدون درس قرآن',
+                    hasQuran ? 'مقرر حضور القرآن' : 'إجازة',
                     style: GoogleFonts.cairo(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,

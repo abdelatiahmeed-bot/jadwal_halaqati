@@ -22,13 +22,17 @@ class _JadwalHomeScreenState extends ConsumerState<JadwalHomeScreen> {
   int _currentIndex = 0;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  final TextEditingController _absenceSearchController = TextEditingController();
+  String _absenceSearchQuery = '';
 
   DateTime _selectedDate = DateTime.now();
-  String _absenceFilter = 'all'; // 'all', 'absent', 'present', 'unmarked'
+  String _absenceFilter = 'all'; // 'all', 'absent', 'present'
+  bool _showScheduleBreakdown = false;
 
   @override
   void dispose() {
     _searchController.dispose();
+    _absenceSearchController.dispose();
     super.dispose();
   }
 
@@ -280,8 +284,10 @@ class _JadwalHomeScreenState extends ConsumerState<JadwalHomeScreen> {
 
                   if (_currentIndex == 0) {
                     return _buildStudentsTab(allStudents, scheduleMap);
-                  } else {
+                  } else if (_currentIndex == 1) {
                     return _buildAbsenceTab(db, allStudents, scheduleMap);
+                  } else {
+                    return _buildDeleteStudentsTab(allStudents);
                   }
                 },
               );
@@ -318,6 +324,11 @@ class _JadwalHomeScreenState extends ConsumerState<JadwalHomeScreen> {
             icon: Icon(Icons.fact_check_outlined),
             activeIcon: Icon(Icons.fact_check_rounded),
             label: 'الغياب والحضور',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_remove_outlined),
+            activeIcon: Icon(Icons.person_remove_rounded),
+            label: 'حذف طالب',
           ),
         ],
       ),
@@ -428,31 +439,11 @@ class _JadwalHomeScreenState extends ConsumerState<JadwalHomeScreen> {
                         if (allStudents.isEmpty) ...[
                           const SizedBox(height: 6),
                           Text(
-                            'اضغط على "إضافة طالب" لإضافة أول طالب وتحديد جدول دروسه',
+                            'اضغط على زر "إضافة طالب" بالأسفل لإضافة أول طالب وتحديد جدول دروسه',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.cairo(
                               fontSize: 12.5,
                               color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-                          ElevatedButton.icon(
-                            onPressed: _showAddStudentDialog,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: IslamicTheme.oliveDeep,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            icon: const Icon(Icons.person_add_alt_1_rounded),
-                            label: Text(
-                              'إضافة طالب',
-                              style: GoogleFonts.cairo(fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
@@ -568,24 +559,10 @@ class _JadwalHomeScreenState extends ConsumerState<JadwalHomeScreen> {
                             ],
                           ),
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                Icons.delete_outline_rounded,
-                                color: Colors.red[400],
-                                size: 22,
-                              ),
-                              tooltip: 'حذف الطالب',
-                              onPressed: () => _confirmDeleteStudent(student),
-                            ),
-                            const Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              size: 16,
-                              color: Colors.grey,
-                            ),
-                          ],
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 16,
+                          color: Colors.grey,
                         ),
                       ),
                     );
@@ -650,18 +627,25 @@ class _JadwalHomeScreenState extends ConsumerState<JadwalHomeScreen> {
           }
         }
 
+        final q = _absenceSearchQuery.trim().toLowerCase();
         final filteredExpected = expectedToday.where((s) {
+          if (q.isNotEmpty && !s.name.toLowerCase().contains(q)) {
+            return false;
+          }
           final rec = attendanceMap[s.id];
           switch (_absenceFilter) {
             case 'absent':
               return rec != null && rec.isAbsent;
             case 'present':
               return rec != null && !rec.isAbsent;
-            case 'unmarked':
-              return rec == null;
             default:
               return true;
           }
+        }).toList();
+
+        final filteredOffToday = offToday.where((s) {
+          if (q.isEmpty) return true;
+          return s.name.toLowerCase().contains(q);
         }).toList();
 
         return Column(
@@ -734,7 +718,46 @@ class _JadwalHomeScreenState extends ConsumerState<JadwalHomeScreen> {
               ),
             ),
 
-            // Summary Stats Row
+            // Search Bar in Absence Tab
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+              child: TextField(
+                controller: _absenceSearchController,
+                onChanged: (val) => setState(() => _absenceSearchQuery = val),
+                decoration: InputDecoration(
+                  hintText: 'ابحث عن طالب في الغياب...',
+                  hintStyle: GoogleFonts.cairo(fontSize: 13),
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: _absenceSearchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _absenceSearchController.clear();
+                            setState(() => _absenceSearchQuery = '');
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: Colors.white,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(
+                      color: IslamicTheme.oliveDeep.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(
+                      color: IslamicTheme.oliveDeep.withValues(alpha: 0.2),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Summary Stats Row (Interactive Buttons)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Row(
@@ -745,6 +768,13 @@ class _JadwalHomeScreenState extends ConsumerState<JadwalHomeScreen> {
                       count: expectedToday.length,
                       color: IslamicTheme.oliveDeep,
                       bgColor: const Color(0xFFF3F6EE),
+                      isSelected: _absenceFilter == 'all',
+                      onTap: () {
+                        setState(() {
+                          _absenceFilter = 'all';
+                          _showScheduleBreakdown = true;
+                        });
+                      },
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -754,6 +784,13 @@ class _JadwalHomeScreenState extends ConsumerState<JadwalHomeScreen> {
                       count: presentCount,
                       color: const Color(0xFF1E6B38),
                       bgColor: const Color(0xFFE8F5E9),
+                      isSelected: _absenceFilter == 'present',
+                      onTap: () {
+                        setState(() {
+                          _absenceFilter = 'present';
+                          _showScheduleBreakdown = false;
+                        });
+                      },
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -763,29 +800,33 @@ class _JadwalHomeScreenState extends ConsumerState<JadwalHomeScreen> {
                       count: absentCount,
                       color: const Color(0xFFB3261E),
                       bgColor: const Color(0xFFFDECEA),
+                      isSelected: _absenceFilter == 'absent',
+                      onTap: () {
+                        setState(() {
+                          _absenceFilter = 'absent';
+                          _showScheduleBreakdown = false;
+                        });
+                      },
                     ),
                   ),
                 ],
               ),
             ),
 
-            // Filter Chips
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
+            // Filter Chips (Centered)
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  _buildFilterChip('all', 'الكل (${expectedToday.length})'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('absent', 'الغائبون ($absentCount)'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip('present', 'الحاضرون ($presentCount)'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(
-                    'unmarked',
-                    'لم يُسجّل (${expectedToday.length - presentCount - absentCount})',
-                  ),
-                ],
+              child: Center(
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _buildFilterChip('all', 'الكل (${expectedToday.length})'),
+                    _buildFilterChip('absent', 'الغائبون ($absentCount)'),
+                    _buildFilterChip('present', 'الحاضرون ($presentCount)'),
+                  ],
+                ),
               ),
             ),
 
@@ -794,6 +835,28 @@ class _JadwalHomeScreenState extends ConsumerState<JadwalHomeScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                 children: [
+                  if (_showScheduleBreakdown && _absenceFilter == 'all') ...[
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE4ECD5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        'من سيحضر اليوم (${filteredExpected.length}):',
+                        style: GoogleFonts.cairo(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: const Color(0xFF2B3724),
+                        ),
+                      ),
+                    ),
+                  ],
+
                   if (expectedToday.isEmpty)
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -1031,26 +1094,28 @@ class _JadwalHomeScreenState extends ConsumerState<JadwalHomeScreen> {
                       );
                     }),
 
-                  if (offToday.isNotEmpty) ...[
+                  if (filteredOffToday.isNotEmpty &&
+                      (_absenceFilter == 'all')) ...[
                     const SizedBox(height: 16),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: Colors.white.withValues(alpha: 0.95),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.grey.withValues(alpha: 0.25),
+                          color: Colors.grey.withValues(alpha: 0.3),
                         ),
                       ),
                       child: ExpansionTile(
+                        initiallyExpanded: _showScheduleBreakdown,
                         title: Text(
-                          'طلاب ليس لديهم درس قرآن يوم $dayName (${offToday.length})',
+                          'من لن يحضر اليوم — إجازة / بدون درس (${filteredOffToday.length})',
                           style: GoogleFonts.cairo(
                             fontSize: 12.5,
                             fontWeight: FontWeight.bold,
                             color: Colors.grey[700],
                           ),
                         ),
-                        children: offToday.map((s) {
+                        children: filteredOffToday.map((s) {
                           return ListTile(
                             dense: true,
                             title: Text(
@@ -1095,36 +1160,49 @@ class _JadwalHomeScreenState extends ConsumerState<JadwalHomeScreen> {
     required int count,
     required Color color,
     required Color bgColor,
+    required bool isSelected,
+    required VoidCallback onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-      decoration: BoxDecoration(
-        color: bgColor,
+    return Material(
+      color: bgColor,
+      borderRadius: BorderRadius.circular(12),
+      elevation: isSelected ? 2.5 : 0,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            '$count',
-            style: GoogleFonts.cairo(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: color,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? color : color.withValues(alpha: 0.25),
+              width: isSelected ? 2 : 1,
             ),
           ),
-          Text(
-            label,
-            style: GoogleFonts.cairo(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          child: Column(
+            children: [
+              Text(
+                '$count',
+                style: GoogleFonts.cairo(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: color,
+                ),
+              ),
+              Text(
+                label,
+                style: GoogleFonts.cairo(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1147,6 +1225,133 @@ class _JadwalHomeScreenState extends ConsumerState<JadwalHomeScreen> {
         color: IslamicTheme.oliveDeep.withValues(alpha: 0.25),
       ),
       onSelected: (_) => setState(() => _absenceFilter = value),
+    );
+  }
+
+  Widget _buildDeleteStudentsTab(List<StudentsTableData> allStudents) {
+    if (allStudents.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.person_off_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'لا يوجد طلاب لحذفهم حالياً',
+              style: GoogleFonts.cairo(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.red.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.red[700]),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'اضغط على زر الحذف بجانب الطالب لإزالته مع جدول دروسه نهائياً.',
+                  style: GoogleFonts.cairo(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red[800],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+            itemCount: allStudents.length,
+            itemBuilder: (context, idx) {
+              final student = allStudents[idx];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 10),
+                elevation: 1,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(color: Colors.red.withValues(alpha: 0.2)),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.red.withValues(alpha: 0.1),
+                    child: Text(
+                      student.name.isNotEmpty ? student.name[0] : 'ط',
+                      style: GoogleFonts.cairo(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red[700],
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    student.name,
+                    style: GoogleFonts.cairo(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  subtitle: student.parentPhone.isNotEmpty
+                      ? Text(
+                          student.parentPhone,
+                          style: GoogleFonts.cairo(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        )
+                      : null,
+                  trailing: ElevatedButton.icon(
+                    onPressed: () => _confirmDeleteStudent(student),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red[700],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                    label: Text(
+                      'حذف',
+                      style: GoogleFonts.cairo(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

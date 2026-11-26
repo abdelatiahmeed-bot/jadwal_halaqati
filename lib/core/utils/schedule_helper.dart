@@ -77,7 +77,17 @@ class StudentWeeklySchedule {
   final Map<String, DaySchedule> days;
 
   StudentWeeklySchedule({Map<String, DaySchedule>? days})
-      : days = days ?? {for (final d in weekDays) d: DaySchedule()};
+      : days = days ?? defaultDays();
+
+  static Map<String, DaySchedule> defaultDays() {
+    return {
+      for (final d in weekDays)
+        d: DaySchedule(
+          hasQuran: d != 'الجمعة',
+          quranTime: '04:00 م',
+        ),
+    };
+  }
 
   static String weekdayName(DateTime date) {
     switch (date.weekday) {
@@ -109,9 +119,7 @@ class StudentWeeklySchedule {
       days.values.where((d) => d.hasQuran).length;
 
   factory StudentWeeklySchedule.fromJsonString(String? jsonStr) {
-    final Map<String, DaySchedule> map = {
-      for (final d in weekDays) d: DaySchedule(),
-    };
+    final Map<String, DaySchedule> map = defaultDays();
     if (jsonStr == null || jsonStr.trim().isEmpty) {
       return StudentWeeklySchedule(days: map);
     }
