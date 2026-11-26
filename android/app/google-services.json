@@ -1,0 +1,118 @@
+{
+  "project_info": {
+    "project_number": "1090036818546",
+    "project_id": "dar-altawheed",
+    "storage_bucket": "dar-altawheed.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1090036818546:android:4e852712eae79be74698eb",
+        "android_client_info": {
+          "package_name": "com.athar.athar"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1090036818546-idlfca76vemp6jjsbfstae29a1aaem93.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1hKuS5yj0CFPKcbBsl-3kA8lTfxhpHWk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1090036818546-idlfca76vemp6jjsbfstae29a1aaem93.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1090036818546-fef9l01prrlf1c963bku53081fnu6oos.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.athar.athar"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1090036818546:android:bae03429bd0cd3bb4698eb",
+        "android_client_info": {
+          "package_name": "com.dar.altawheed"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1090036818546-idlfca76vemp6jjsbfstae29a1aaem93.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1hKuS5yj0CFPKcbBsl-3kA8lTfxhpHWk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1090036818546-idlfca76vemp6jjsbfstae29a1aaem93.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1090036818546-fef9l01prrlf1c963bku53081fnu6oos.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.athar.athar"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1090036818546:android:982e76d1a8b337104698eb",
+        "android_client_info": {
+          "package_name": "com.example.quran_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1090036818546-idlfca76vemp6jjsbfstae29a1aaem93.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1hKuS5yj0CFPKcbBsl-3kA8lTfxhpHWk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1090036818546-idlfca76vemp6jjsbfstae29a1aaem93.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1090036818546-fef9l01prrlf1c963bku53081fnu6oos.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.athar.athar"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
